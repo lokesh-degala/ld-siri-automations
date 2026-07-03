@@ -1,0 +1,61 @@
+name: Fetch Panchang Data Daily
+
+# Run every day at 6 AM UTC (6 AM IST = 00:30 UTC, adjusted)
+on:
+  schedule:
+    - cron: '30 0 * * *'  # 6 AM IST every day
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  fetch-panchang:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      # Step 2: Set up Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+      
+      # Step 4: Run the fetch script from repo root
+      - name: Fetch panchang data
+        run: python fetch_panchang.py
+      
+      # Step 5: Check if there are changes
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --exit-code panchang/panchang.json > /dev/null 2>&1; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      # Step 6: Commit and push changes
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config --global user.email "panchang-bot@github.com"
+          git config --global user.name "Panchang Bot"
+          git add panchang/panchang.json panchang/panchang_voice.json
+          git commit -m "Update panchang data - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
+          git push
+      
+      # Step 7: Log success
+      - name: Log success
+        run: |
+          echo "✓ Panchang data fetched and saved successfully"
+          echo "✓ Files: panchang/panchang.json, panchang/panchang_voice.json"
+          echo "✓ Updated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
