@@ -45,13 +45,12 @@ jobs:
       
       # Step 6: Commit and push changes
       - name: Commit and push changes
-        if: steps.changes.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           git config --global user.email "panchang-bot@github.com"
           git config --global user.name "Panchang Bot"
           git add panchang/panchang.json panchang/panchang_voice.json
           git commit -m "Update panchang data - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
-          git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin main || echo "Push failed"
 
       # Step 7: Log success
       - name: Log success
