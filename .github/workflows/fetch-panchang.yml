@@ -51,8 +51,8 @@ jobs:
           git config --global user.name "Panchang Bot"
           git add panchang/panchang.json panchang/panchang_voice.json
           git commit -m "Update panchang data - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
-          git push
-      
+          git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
       # Step 7: Log success
       - name: Log success
         run: |
